@@ -37,9 +37,9 @@ jobs:
         id: tokenid
         with:
           script: |
-            const core = require('@actions/core')
-            let id_token = await core.getIDToken('${{ env.FED_AUDIENCE }}')
-            core.setOutput('id_token', id_token)
+            const id_token = await getIDToken('${{ env.FED_AUDIENCE }}');
+            core.setOutput('id_token', id_token);
+
 
       # Обмен id_token на временный oauth-токен (step 1)
       - name: Exchange id_token to Oauth federated user token

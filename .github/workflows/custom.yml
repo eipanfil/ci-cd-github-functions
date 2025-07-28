@@ -14,7 +14,7 @@ env:
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_MEMORY: 134217728
   FUNCTION_SOURCEROOT: .
-  SA_ID: ajejocsfa1jj33b9g8sk
+  SA_ID: ajeoerss1fa44nfn6mhr
   
 jobs:
   function_version_deployment_job:

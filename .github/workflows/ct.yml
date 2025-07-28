@@ -12,7 +12,7 @@ on:
 
 env:
   FOLDER_ID: b1g681qpemb4t39as5qk
-  FUNCTION_NAME: from-github-preprod
+  FUNCTION_NAME: from-github-ct
   FUNCTION_RUNTIME: nodejs22
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_SOURCEROOT: .

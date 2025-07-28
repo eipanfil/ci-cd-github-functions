@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  FUNCTION_ID: d4e9lmrcsh93j4gl3hln
+  FUNCTION_ID: d4em78pdr3n2dbf2goni
   FUNCTION_RUNTIME: nodejs22
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_MEMORY: 134217728

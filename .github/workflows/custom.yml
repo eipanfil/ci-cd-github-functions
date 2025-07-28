@@ -59,8 +59,8 @@ jobs:
         id: redeployment
         run: |
           FILE_BYTES=$(cat ./function.zip | base64)
-                    
-          curl -X POST -sH "Authorization: Bearer ${{steps.IAMtoken.outputs.IAMTOKEN}}" https://serverless-functions.api.cloud.yandex.net/functions/v1/versions \
+                      
+          RESPONSE=$(curl -X POST -sH "Authorization: Bearer ${{steps.IAMtoken.outputs.IAMTOKEN}}" https://serverless-functions.api.cloud.yandex.net/functions/v1/versions \
             -d @- << EOF 
           { 
             "functionId": "${{env.FUNCTION_ID}}",
@@ -73,3 +73,6 @@ jobs:
             "content": '${FILE_BYTES}'
           }
           EOF
+          )
+          echo "----- Яндекс Клауд Функшн API ответ -----"
+          echo "$RESPONSE"

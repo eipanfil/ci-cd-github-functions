@@ -24,10 +24,6 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      - name: Debug all env
-        run: env
-      - name: Debug memory value
-        run: echo "FUNCTION_MEMORY=$FUNCTION_MEMORY"
       - name: Deploy Function
         id: sls-func
         uses: yc-actions/yc-sls-function@v3.1.0

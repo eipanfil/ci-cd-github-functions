@@ -3,8 +3,8 @@ permissions:
   contents: read  # Это необходимо для actions/checkout
 
 on: 
-  push:
-    branches: [ main ]
+  #push:
+  #  branches: [ main ]
   # Позволяет запускать этот workflow вручную из вкладки Actions
   workflow_dispatch:
 

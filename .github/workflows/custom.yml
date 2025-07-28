@@ -2,10 +2,7 @@ permissions:
   id-token: write # Это необходимо для запроса JWT
   contents: read  # Это необходимо для actions/checkout
 
-on: 
-  #push:
-  #  branches: [ main ]
-  # Позволяет запускать этот workflow вручную из вкладки Actions
+on:
   workflow_dispatch:
 
 env:
@@ -14,8 +11,9 @@ env:
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_MEMORY: 134217728
   FUNCTION_SOURCEROOT: .
-  FED_AUDIENCE: https://github.com/eipanfil
-  
+  FED_AUDIENCE: https://github.com/eipanfil        # Это строго как в федерации!
+  SA_ID: ajejocsfa1jj33b9g8sk                      # <-- Подставь свой ID сервисного аккаунта здесь!
+
 jobs:
   function_version_deployment_job:
     runs-on: ubuntu-latest
@@ -26,51 +24,64 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-      # Упаковать все в zip
       - name: Zip the code
         run: |
           zip function.zip ./*.js ./*.json
       - name: Install dependencies
         run: npm ci
       - run: npm run build --if-present
-      - name: Install OIDC Client from Core Package
-        run: npm install @actions/core @actions/http-client
-      # Получение рабочего токена workflow
+
+      # Получение id_token (OIDC token от GitHub)
       - name: Get Id Token
         uses: actions/github-script@v7
         id: tokenid
         with:
           script: |
-            const coredemo = require('@actions/core')
-            let id_token = await coredemo.getIDToken()
-            coredemo.setOutput('id_token', id_token)
-            console.log(context)
-            
-      # Обмен рабочего токена workflow на IAM-токен сервисного аккаунта в Yandex Cloud
-      - name: GetIAMToken
-        run: |
-          
-          IAMTOKEN=$(curl -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=${{env.FED_AUDIENCE}}&subject_token=${{steps.tokenid.outputs.id_token}}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
-          echo "IAMToken=${IAMTOKEN}" >> $GITHUB_OUTPUT
-        id: IAMtoken
+            const core = require('@actions/core')
+            let id_token = await core.getIDToken('${{ env.FED_AUDIENCE }}')
+            core.setOutput('id_token', id_token)
 
-      # Запрос списка функций через API с использованием IAM токена в Yandex Cloud
+      # Обмен id_token на временный oauth-токен (step 1)
+      - name: Exchange id_token to Oauth federated user token
+        id: oauth_token
+        run: |
+          echo "DEBUG: audience=${{ env.FED_AUDIENCE }}"
+          echo "DEBUG: sa=${{ env.SA_ID }}"
+          FED_OAUTH_TOKEN=$(curl -sH "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=${{env.FED_AUDIENCE}}&subject_token=${{steps.tokenid.outputs.id_token}}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
+            -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
+          echo "::add-mask::$FED_OAUTH_TOKEN"
+          echo "FED_OAUTH_TOKEN=$FED_OAUTH_TOKEN" >> $GITHUB_ENV
+
+      # Имперсонация токена: обменять federated user token на IAM токен сервисного аккаунта (step 2)
+      - name: Exchange OAuth token to IAM token of service account
+        id: IAMtoken
+        run: |
+          # Yandex требует сделать impersonation!
+          IAMTOKEN=$(curl -sH "Authorization: Bearer $FED_OAUTH_TOKEN" \
+            -d "{\"service_account_id\": \"${{ env.SA_ID }}\"}" \
+            -H "Content-Type: application/json" \
+            -X POST https://iam.api.cloud.yandex.net/iam/v1/tokens | jq -r '.iamToken')
+          echo "::add-mask::$IAMTOKEN"
+          echo "IAMToken=$IAMTOKEN" >> $GITHUB_OUTPUT
+
+      # Развёртывание функции с использованием IAM токена сервисного аккаунта
       - name: Trigger function redeployment step
         id: redeployment
         run: |
           FILE_BYTES=$(cat ./function.zip | base64)
-                      
-          RESPONSE=$(curl -X POST -sH "Authorization: Bearer ${{steps.IAMtoken.outputs.IAMTOKEN}}" https://serverless-functions.api.cloud.yandex.net/functions/v1/versions \
-            -d @- << EOF 
-          { 
+
+          RESPONSE=$(curl -X POST -sH "Authorization: Bearer ${{steps.IAMtoken.outputs.IAMToken}}" https://serverless-functions.api.cloud.yandex.net/functions/v1/versions \
+            -d @- << EOF
+          {
             "functionId": "${{env.FUNCTION_ID}}",
             "runtime": "${{env.FUNCTION_RUNTIME}}",
-            "entrypoint": "${{env.FUNCTION_ENTRYPOINT}}", 
-            "resources": { 
+            "entrypoint": "${{env.FUNCTION_ENTRYPOINT}}",
+            "resources": {
               "memory": "${{env.FUNCTION_MEMORY}}"
-            },
-            "executionTimeout": "3s", 
-            "content": '${FILE_BYTES}'
+          },
+            "executionTimeout": "3s",
+            "content": "${FILE_BYTES}"
           }
           EOF
           )

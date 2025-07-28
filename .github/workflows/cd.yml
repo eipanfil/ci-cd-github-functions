@@ -1,0 +1,44 @@
+permissions:
+  id-token: write # Это необходимо для запроса JWT
+
+on: 
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**' # Это позволит игнорировать изменения в файлах workflow
+
+  release:
+    types:
+      - published
+
+  # Позволяет запускать этот workflow вручную из вкладки Actions
+  workflow_dispatch:
+
+env:
+  FOLDER_ID: b1g681qpemb4t39as5qk
+  FUNCTION_NAME: from-github-production
+  FUNCTION_RUNTIME: nodejs22
+  FUNCTION_ENTRYPOINT: index.handler
+  FUNCTION_SOURCEROOT: .
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Function
+        id: sls-func
+        uses: yc-actions/yc-sls-function@v3.1.0
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_KEY_JSON }}
+          folder-id: ${{env.FOLDER_ID}}
+          function-name: ${{env.FUNCTION_NAME}}
+          runtime: ${{env.FUNCTION_RUNTIME}}
+          memory: ${{env.FUNCTION_MEMORY}}
+          entrypoint: ${{env.FUNCTION_ENTRYPOINT}}
+          source-root: ${{env.FUNCTION_SOURCEROOT}}
+          include: |
+            **/*.json
+            **/*.js

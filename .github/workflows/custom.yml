@@ -14,7 +14,7 @@ env:
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_MEMORY: 134217728
   FUNCTION_SOURCEROOT: .
-  SA_ID: ajeoerss1fa44nfn6mhr
+  SA_ID: https://github.com/eipanfil
   
 jobs:
   function_version_deployment_job:

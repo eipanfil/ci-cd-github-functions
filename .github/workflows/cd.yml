@@ -28,18 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Get OIDC token
-        id: get-oidc-token
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { getIDToken, setOutput } = require('@actions/core');
-            const idToken = await getIDToken();
-            setOutput('id_token', idToken);
-      - name: Print OIDC token claims
+      - name: Request OIDC JWT
+        id: oidc
         run: |
-          PAYLOAD=$(echo "${{ steps.get-oidc-token.outputs.id_token }}" | cut -d '.' -f2 | base64 -d 2>/dev/null || echo "bad-b64")
-          echo "$PAYLOAD"
+          # получить OIDC-токен в переменную
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                  "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://Default")
+          # Извлечь сам токен
+          ID_TOKEN=$(echo "$TOKEN" | jq -r .value)
+          # показать payload
+          echo "$ID_TOKEN" | cut -d "." -f2 | tr '_-' '/+' | base64 -d | jq .
       - name: Deploy Function
         id: sls-func
         uses: yc-actions/yc-sls-function@v3.1.0

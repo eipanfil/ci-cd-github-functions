@@ -29,6 +29,18 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+      - name: Print OIDC token claims
+        run: |
+          echo $ACTIONS_ID_TOKEN_REQUEST_TOKEN | base64 -d | jq .
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ steps.get-token.outputs.id_token }}
+        id: get-token
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { getIDToken } = require("@actions/core");
+            const idToken = await getIDToken();
+            core.setOutput("id_token", idToken);
       - name: Deploy Function
         id: sls-func
         uses: yc-actions/yc-sls-function@v3.1.0

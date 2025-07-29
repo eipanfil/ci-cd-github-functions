@@ -17,7 +17,7 @@ exports.handler = async function (event, context) {
 
   // Проверяем наличие "hello" без учета регистра
   if (inputStr.toLowerCase().includes('hello')) {
-      result = "CUSTOM";
+      result = "Hello, Said!";
   } else {
       result = "Nothing to say!";
   }

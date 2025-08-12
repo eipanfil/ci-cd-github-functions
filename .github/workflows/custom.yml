@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  FUNCTION_ID: d4ecufifdkooh8m8li7m
+  FUNCTION_NAME: from-github-custom
+  #FUNCTION_ID: d4ecufifdkooh8m8li7m
   FUNCTION_RUNTIME: nodejs22
   FUNCTION_ENTRYPOINT: index.handler
   FUNCTION_MEMORY: "128mb"
@@ -71,7 +72,8 @@ jobs:
           RESPONSE=$(curl -X POST -sH "Authorization: Bearer ${{steps.IAMtoken.outputs.IAMToken}}" https://serverless-functions.api.cloud.yandex.net/functions/v1/versions \
             -d @- << EOF
           {
-            "functionId": "${{env.FUNCTION_ID}}",
+            
+            "function-name": "${{env.FUNCTION_NAME}}",
             "runtime": "${{env.FUNCTION_RUNTIME}}",
             "entrypoint": "${{env.FUNCTION_ENTRYPOINT}}",
             "resources": {
@@ -84,3 +86,5 @@ jobs:
           )
           echo "----- Яндекс Клауд Функшн API ответ -----"
           echo "$RESPONSE"
+
+#"functionId": "${{env.FUNCTION_ID}}",

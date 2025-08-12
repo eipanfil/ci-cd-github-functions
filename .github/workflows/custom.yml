@@ -12,7 +12,7 @@ env:
   FUNCTION_MEMORY: 134217728
   FUNCTION_SOURCEROOT: .
   FED_AUDIENCE: https://github.com/eipanfil        # Это строго как в федерации!
-  SA_ID: ajejocsfa1jj33b9g8sk                      # <-- Подставь свой ID сервисного аккаунта здесь!
+  SA_ID: ajeusff8qn9a7bvdfrtg                      # <-- Подставь свой ID сервисного аккаунта здесь!
 
 jobs:
   function_version_deployment_job:

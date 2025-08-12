@@ -12,10 +12,11 @@ on:
 
 env:
   FOLDER_ID: b1g681qpemb4t39as5qk
-  SA_ID: ajejocsfa1jj33b9g8sk
+  SA_ID: ajeusff8qn9a7bvdfrtg
   FUNCTION_NAME: from-github-ct
   FUNCTION_RUNTIME: nodejs22
   FUNCTION_ENTRYPOINT: index.handler
+  FUNCTION_MEMORY: 134217728
   FUNCTION_SOURCEROOT: .
   
 jobs:
@@ -35,6 +36,7 @@ jobs:
           function-name: ${{env.FUNCTION_NAME}}
           runtime: ${{env.FUNCTION_RUNTIME}}
           entrypoint: ${{env.FUNCTION_ENTRYPOINT}}
+          memory: ${{env.FUNCTION_MEMORY}}
           source-root: ${{env.FUNCTION_SOURCEROOT}}
           include: |
             **/*.json

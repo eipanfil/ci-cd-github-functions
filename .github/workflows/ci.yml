@@ -37,7 +37,6 @@ jobs:
           runtime: ${{env.FUNCTION_RUNTIME}}
           memory: ${{env.FUNCTION_MEMORY}}
           entrypoint: ${{env.FUNCTION_ENTRYPOINT}}
-          memory: ${{env.FUNCTION_MEMORY}}
           source-root: ${{env.FUNCTION_SOURCEROOT}}
           include: |
             **/*.json
